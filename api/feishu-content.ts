@@ -5,10 +5,10 @@ import axios from 'axios';
 // ... (这里省略了之前的所有接口定义和函数，它们保持不变)
 
 // 在 Vercel 的服务器环境中，我们使用 process.env 来访问环境变量
-const APP_ID = process.env.VITE_FEISHU_APP_ID;
-const APP_SECRET = process.env.VITE_FEISHU_APP_SECRET;
-const APP_TOKEN = process.env.VITE_FEISHU_APP_TOKEN;
-const TABLE_ID = process.env.VITE_FEISHU_TABLE_ID;
+const APP_ID = process.env.FEISHU_APP_ID;
+const APP_SECRET = process.env.FEISHU_APP_SECRET;
+const APP_TOKEN = process.env.FEISHU_APP_TOKEN;
+const TABLE_ID = process.env.FEISHU_TABLE_ID;
 
 const FEISHU_API_BASE = 'https://open.feishu.cn/open-apis';
 
