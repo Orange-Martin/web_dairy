@@ -1,10 +1,11 @@
 interface HeaderProps {
+  logoText?: string;
   categories: string[];
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
 }
 
-export function Header({ categories, selectedCategory, onCategoryChange }: HeaderProps) {
+export function Header({ logoText, categories, selectedCategory, onCategoryChange }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-stone-50/95 backdrop-blur-sm border-b border-stone-200/50">
       <div className="max-w-6xl mx-auto px-8 md:px-16 py-12">
@@ -12,7 +13,7 @@ export function Header({ categories, selectedCategory, onCategoryChange }: Heade
           {/* Logo */}
           <div className="text-center space-y-2">
             <h2 className="text-xl tracking-[0.2em] text-stone-800" style={{ fontWeight: 300 }}>
-              游记手札
+              {logoText || '游记手札'}
             </h2>
             <div className="h-px w-16 bg-stone-300 mx-auto" />
           </div>

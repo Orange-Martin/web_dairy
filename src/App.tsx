@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { ArticleGrid } from "./components/ArticleGrid";
 import { ArticleDetail } from "./components/ArticleDetail";
 import { Footer } from "./components/Footer";
+import { fetchWebsiteContent } from "./services/feishu";
 
 export interface Article {
   id: string;
@@ -150,43 +151,54 @@ const articles: Article[] = [
 ];
 
 export default function App() {
-  const [selectedArticle, setSelectedArticle] =
-    useState<Article | null>(null);
-  const [selectedCategory, setSelectedCategory] =
-    useState<string>("全部");
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("全部");
+  const [content, setContent] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const loadContent = async () => {
+      const fetchedContent = await fetchWebsiteContent();
+      console.log('Fetched content from Feishu:', fetchedContent);
+      setContent(fetchedContent);
+    };
+    loadContent();
+  }, []);
 
   const categories = ["全部", "亚洲", "欧洲", "海岛", "非洲"];
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setSelectedArticle(null); // Reset article selection when category changes
+  };
 
   const filteredArticles =
     selectedCategory === "全部"
       ? articles
-      : articles.filter(
-          (article) => article.category === selectedCategory,
-        );
+      : articles.filter((article) => article.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      {!selectedArticle ? (
+    <div className="bg-stone-50 min-h-screen font-sans">
+      {selectedArticle ? (
+        <ArticleDetail 
+          article={selectedArticle} 
+          onBack={() => setSelectedArticle(null)} 
+        />
+      ) : (
         <>
           <Hero />
           <Header
+            logoText={content.header_logo}
             categories={categories}
             selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+            onCategoryChange={handleCategoryChange}
           />
           <ArticleGrid
             articles={filteredArticles}
             onArticleClick={setSelectedArticle}
           />
+          <Footer />
         </>
-      ) : (
-        <ArticleDetail
-          article={selectedArticle}
-          onBack={() => setSelectedArticle(null)}
-        />
       )}
-
-      <Footer />
     </div>
   );
 }
