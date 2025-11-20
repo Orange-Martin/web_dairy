@@ -99,6 +99,15 @@ export default async function handler(
   res: VercelResponse
 ) {
   console.log(`[api/feishu-content] Received request for: ${req.url}`);
+  const missing: string[] = [];
+  if (!APP_ID) missing.push('FEISHU_APP_ID');
+  if (!APP_SECRET) missing.push('FEISHU_APP_SECRET');
+  if (!APP_TOKEN) missing.push('FEISHU_APP_TOKEN');
+  if (!TABLE_ID) missing.push('FEISHU_TABLE_ID');
+  if (missing.length) {
+    res.status(500).json({ error: `Missing env: ${missing.join(', ')}` });
+    return;
+  }
   try {
     const accessToken = await getTenantAccessToken();
     const records = await getBitableRecords(accessToken);
