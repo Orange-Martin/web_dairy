@@ -51,7 +51,7 @@ import { defineConfig } from 'vite';
     },
     build: {
       target: 'esnext',
-      outDir: 'build',
+      outDir: 'dist',
     },
     server: {
       port: 3000,
@@ -60,7 +60,7 @@ import { defineConfig } from 'vite';
         '/api': {
           target: 'http://localhost:3001',
           changeOrigin: true,
-          rewrite: (path) => '/',
+          rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
     },

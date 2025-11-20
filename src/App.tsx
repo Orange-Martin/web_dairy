@@ -156,10 +156,8 @@ export default function App() {
   const [content, setContent] = useState<Record<string, any>>({});
 
   useEffect(() => {
-    console.log('>>> Vercel 部署版本测试: 正在尝试获取飞书数据...');
     const loadContent = async () => {
       const fetchedContent = await fetchWebsiteContent();
-      console.log('Fetched content from Feishu:', fetchedContent);
       setContent(fetchedContent);
     };
     loadContent();

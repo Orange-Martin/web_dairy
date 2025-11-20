@@ -5,10 +5,10 @@ import axios from 'axios';
 // ... (这里省略了之前的所有接口定义和函数，它们保持不变)
 
 // 在 Vercel 的服务器环境中，我们使用 process.env 来访问环境变量
-const APP_ID = process.env.FEISHU_APP_ID;
-const APP_SECRET = process.env.FEISHU_APP_SECRET;
-const APP_TOKEN = process.env.FEISHU_APP_TOKEN;
-const TABLE_ID = process.env.FEISHU_TABLE_ID;
+const APP_ID = process.env.FEISHU_APP_ID || process.env.VITE_FEISHU_APP_ID;
+const APP_SECRET = process.env.FEISHU_APP_SECRET || process.env.VITE_FEISHU_APP_SECRET;
+const APP_TOKEN = process.env.FEISHU_APP_TOKEN || process.env.VITE_FEISHU_APP_TOKEN;
+const TABLE_ID = process.env.FEISHU_TABLE_ID || process.env.VITE_FEISHU_TABLE_ID;
 
 const FEISHU_API_BASE = 'https://open.feishu.cn/open-apis';
 
@@ -98,6 +98,7 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  console.log(`[api/feishu-content] Received request for: ${req.url}`);
   try {
     const accessToken = await getTenantAccessToken();
     const records = await getBitableRecords(accessToken);
@@ -118,7 +119,7 @@ export default async function handler(
 if (require.main === module) {
   const PORT = 3001;
   const server = http.createServer(async (req, res) => {
-    // 我们不再直接调用 handler，而是手动实现一个精简版的逻辑
+    console.log(`[Local API Server] Received request for: ${req.url}`);
     try {
       const accessToken = await getTenantAccessToken();
       const records = await getBitableRecords(accessToken);
