@@ -29,14 +29,37 @@ export default function App() {
     const loadContent = async () => {
       const fetched = await fetchWebsiteContent();
       const cfg = fetched.config || fetched;
-      const list = fetched.articles || [];
       setContent(cfg);
-      setArticles(list);
+      const built: Article[] = [];
+      for (let i = 1; i <= 6; i++) {
+        const p = `grid_${i}`;
+        const title = cfg[`${p}_title`];
+        const cover = cfg[`${p}_cover_url`];
+        if (!title || !cover) continue;
+        built.push({
+          id: String(i),
+          title: String(title),
+          subtitle: String(cfg[`${p}_subtitle`] || ''),
+          date: String(cfg[`${p}_date`] || ''),
+          location: String(cfg[`${p}_location`] || ''),
+          coverImage: String(cover),
+          category: String(cfg[`${p}_category`] || ''),
+          content: String(cfg[`${p}_content`] || ''),
+          gallery: String(cfg[`${p}_gallery_urls`] || '')
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean),
+          readTime: String(cfg[`${p}_read_time`] || ''),
+        });
+      }
+      setArticles(built);
     };
     loadContent();
   }, []);
 
   const categories = ["全部", "亚洲", "欧洲", "海岛", "非洲"];
+  const dynamicCategories = Array.from(new Set(articles.map(a => a.category).filter(Boolean)));
+  const allCategories = dynamicCategories.length > 0 ? ["全部", ...dynamicCategories] : categories;
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -57,10 +80,23 @@ export default function App() {
         />
       ) : (
         <>
-          <Hero />
+          <Hero
+            smallIntro={content.hero_small_intro}
+            titleLine1={content.hero_title_line1}
+            titleLine2={content.hero_title_line2}
+            badgeTitle={content.hero_badge_title}
+            description={content.hero_description}
+            statsStories={content.stats_stories}
+            statsRegions={content.stats_regions}
+            statsLatest={content.stats_latest}
+            imageUrl={content.hero_image_url}
+            captionTitle={content.hero_caption_title}
+            captionSubtitle={content.hero_caption_subtitle}
+            captionIndex={content.hero_caption_index}
+          />
           <Header
             logoText={content.header_logo}
-            categories={categories}
+            categories={allCategories}
             selectedCategory={selectedCategory}
             onCategoryChange={handleCategoryChange}
           />
@@ -68,7 +104,11 @@ export default function App() {
             articles={filteredArticles}
             onArticleClick={setSelectedArticle}
           />
-          <Footer />
+          <Footer
+            title={content.footer_title}
+            text={content.footer_text}
+            year={content.footer_year}
+          />
         </>
       )}
     </div>

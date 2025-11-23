@@ -1,7 +1,35 @@
 import { ChevronDown, Minus } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
-export function Hero() {
+interface HeroProps {
+  smallIntro?: string;
+  titleLine1?: string;
+  titleLine2?: string;
+  badgeTitle?: string;
+  description?: string;
+  statsStories?: string;
+  statsRegions?: string;
+  statsLatest?: string;
+  imageUrl?: string;
+  captionTitle?: string;
+  captionSubtitle?: string;
+  captionIndex?: string;
+}
+
+export function Hero({
+  smallIntro,
+  titleLine1,
+  titleLine2,
+  badgeTitle,
+  description,
+  statsStories,
+  statsRegions,
+  statsLatest,
+  imageUrl,
+  captionTitle,
+  captionSubtitle,
+  captionIndex,
+}: HeroProps) {
   const scrollToContent = () => {
     window.scrollTo({
       top: window.innerHeight * 0.85,
@@ -21,7 +49,7 @@ export function Hero() {
               <div className="flex items-center gap-4">
                 <div className="w-8 h-px bg-stone-400" />
                 <span className="text-[10px] tracking-[0.25em] text-stone-500 uppercase">
-                  Photography & Writing
+                  {smallIntro || 'Photography & Writing'}
                 </span>
               </div>
               
@@ -33,21 +61,21 @@ export function Hero() {
                     letterSpacing: '0.08em',
                     lineHeight: '1.1'
                   }}>
-                    游记
+                    {titleLine1 || '游记'}
                   </h1>
                   <h1 className="text-6xl md:text-7xl text-stone-900" style={{ 
                     fontWeight: 200,
                     letterSpacing: '0.08em',
                     lineHeight: '1.1'
                   }}>
-                    手札
+                    {titleLine2 || '手札'}
                   </h1>
                 </div>
                 
                 <div className="flex items-center gap-4 pl-1">
                   <div className="w-12 h-px bg-stone-900" />
                   <span className="text-xs tracking-[0.3em] text-stone-400" style={{ fontWeight: 300 }}>
-                    TRAVEL JOURNAL
+                    {badgeTitle || 'TRAVEL JOURNAL'}
                   </span>
                 </div>
               </div>
@@ -60,8 +88,7 @@ export function Hero() {
                 fontSize: '0.9375rem',
                 lineHeight: '2'
               }}>
-                用镜头捕捉时光的温度，以文字铭刻旅途的印记。<br />
-                每一段旅程，都是一次与世界的对话。
+                {description || '用镜头捕捉时光的温度，以文字铭刻旅途的印记。\n每一段旅程，都是一次与世界的对话。'}
               </p>
               
               {/* Stats */}
@@ -69,17 +96,17 @@ export function Hero() {
                 <div className="absolute -left-4 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-stone-300 to-transparent" />
                 <div className="flex items-center gap-8 pl-4">
                   <div className="space-y-2">
-                    <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>06</div>
+                    <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>{statsStories || '06'}</div>
                     <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Stories</div>
                   </div>
                   <div className="w-px h-12 bg-stone-300" />
                   <div className="space-y-2">
-                    <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>04</div>
+                    <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>{statsRegions || '04'}</div>
                     <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Regions</div>
                   </div>
                   <div className="w-px h-12 bg-stone-300" />
                   <div className="space-y-2">
-                    <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>2025</div>
+                    <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>{statsLatest || '2025'}</div>
                     <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Latest</div>
                   </div>
                 </div>
@@ -108,7 +135,7 @@ export function Hero() {
             
             <div className="relative aspect-[4/5] overflow-hidden bg-stone-200">
               <ImageWithFallback
-                src="https://images.unsplash.com/photo-1759519028791-13f7fb5e71aa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiYW1ib28lMjBmb3Jlc3QlMjBwZWFjZWZ1bHxlbnwxfHx8fDE3NjM2MDExNzV8MA&ixlib=rb-4.1.0&q=80&w=1080"
+                src={imageUrl || "https://images.unsplash.com/photo-1759519028791-13f7fb5e71aa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiYW1ib28lMjBmb3Jlc3QlMjBwZWFjZWZ1bHxlbnwxfHx8fDE3NjM2MDExNzV8MA&ixlib=rb-4.1.0&q=80&w=1080"}
                 alt="Hero"
                 className="w-full h-full object-cover"
               />
@@ -118,14 +145,14 @@ export function Hero() {
                 <div className="flex items-end justify-between text-white">
                   <div className="space-y-2">
                     <div className="text-lg tracking-wide" style={{ fontWeight: 300 }}>
-                      静谧之境
+                      {captionTitle || '静谧之境'}
                     </div>
                     <div className="text-[10px] tracking-[0.2em] text-white/70 uppercase">
-                      Tranquility
+                      {captionSubtitle || 'Tranquility'}
                     </div>
                   </div>
                   <div className="text-xs tracking-wider text-white/70" style={{ fontWeight: 300 }}>
-                    01
+                    {captionIndex || '01'}
                   </div>
                 </div>
               </div>
