@@ -9,6 +9,7 @@ const APP_ID = process.env.FEISHU_APP_ID || process.env.VITE_FEISHU_APP_ID;
 const APP_SECRET = process.env.FEISHU_APP_SECRET || process.env.VITE_FEISHU_APP_SECRET;
 const APP_TOKEN = process.env.FEISHU_APP_TOKEN || process.env.VITE_FEISHU_APP_TOKEN;
 const TABLE_ID = process.env.FEISHU_TABLE_ID || process.env.VITE_FEISHU_TABLE_ID;
+const ARTICLES_TABLE_ID = process.env.FEISHU_ARTICLES_TABLE_ID || process.env.VITE_FEISHU_ARTICLES_TABLE_ID;
 
 const FEISHU_API_BASE = 'https://open.feishu.cn/open-apis';
 
@@ -92,6 +93,26 @@ function formatRecords(records: BitableRecord[]): Record<string, any> {
   return contentMap;
 }
 
+function formatArticles(records: any[]): any[] {
+  const list: any[] = [];
+  for (const r of records) {
+    const f = r.fields || {};
+    list.push({
+      id: String(f.id || r.id || r.record_id || ''),
+      title: String(f.title || ''),
+      subtitle: String(f.subtitle || ''),
+      date: String(f.date || ''),
+      location: String(f.location || ''),
+      coverImage: String(f.cover_image_url || ''),
+      category: String(f.category || ''),
+      readTime: String(f.read_time || ''),
+      content: String(f.content || ''),
+      gallery: Array.isArray(f.gallery_urls) ? f.gallery_urls.map((x: any) => String(x)) : [],
+    });
+  }
+  return list;
+}
+
 
 // 这是我们之前写的核心逻辑，现在我们让它既能被 Vercel 调用，也能被本地的 http 服务器调用
 export default async function handler(
@@ -104,16 +125,27 @@ export default async function handler(
   if (!APP_SECRET) missing.push('FEISHU_APP_SECRET');
   if (!APP_TOKEN) missing.push('FEISHU_APP_TOKEN');
   if (!TABLE_ID) missing.push('FEISHU_TABLE_ID');
+  if (!ARTICLES_TABLE_ID) console.warn('FEISHU_ARTICLES_TABLE_ID not set, articles will be empty');
   if (missing.length) {
     res.status(500).json({ error: `Missing env: ${missing.join(', ')}` });
     return;
   }
   try {
     const accessToken = await getTenantAccessToken();
-    const records = await getBitableRecords(accessToken);
-    const formattedContent = formatRecords(records);
+    const configRecords = await getBitableRecords(accessToken);
+    const formattedContent = formatRecords(configRecords);
+    let articlesList: any[] = [];
+    if (ARTICLES_TABLE_ID) {
+      const response = await axios.get<BitableRecordsResponse>(
+        `${FEISHU_API_BASE}/bitable/v1/apps/${APP_TOKEN}/tables/${ARTICLES_TABLE_ID}/records`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (response.data.code === 0) {
+        articlesList = formatArticles(response.data.data.items);
+      }
+    }
     res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate');
-    res.status(200).json(formattedContent);
+    res.status(200).json({ config: formattedContent, articles: articlesList });
   } catch (error) {
     console.error('Error in serverless function:', error);
     // @ts-ignore
@@ -131,13 +163,23 @@ if (require.main === module) {
     console.log(`[Local API Server] Received request for: ${req.url}`);
     try {
       const accessToken = await getTenantAccessToken();
-      const records = await getBitableRecords(accessToken);
-      const formattedContent = formatRecords(records);
+      const configRecords = await getBitableRecords(accessToken);
+      const formattedContent = formatRecords(configRecords);
+      let articlesList: any[] = [];
+      if (ARTICLES_TABLE_ID) {
+        const response = await axios.get<BitableRecordsResponse>(
+          `${FEISHU_API_BASE}/bitable/v1/apps/${APP_TOKEN}/tables/${ARTICLES_TABLE_ID}/records`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        if (response.data.code === 0) {
+          articlesList = formatArticles(response.data.data.items);
+        }
+      }
 
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*'); // 允许跨域
       res.writeHead(200);
-      res.end(JSON.stringify(formattedContent));
+      res.end(JSON.stringify({ config: formattedContent, articles: articlesList }));
 
     } catch (error) {
       console.error('Error in local API server:', error);
