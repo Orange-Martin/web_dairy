@@ -45,10 +45,12 @@ export default function App() {
           coverImage: String(cover),
           category: String(cfg[`${p}_category`] || ''),
           content: String(cfg[`${p}_content`] || ''),
-          gallery: String(cfg[`${p}_gallery_urls`] || '')
-            .split('\n')
-            .map(s => s.trim())
-            .filter(Boolean),
+          gallery: Array.isArray(cfg[`${p}_gallery_urls`])
+            ? (cfg[`${p}_gallery_urls`] as string[])
+            : String(cfg[`${p}_gallery_urls`] || '')
+                .split('\n')
+                .map(s => s.trim())
+                .filter(Boolean),
           readTime: String(cfg[`${p}_read_time`] || ''),
         });
       }

@@ -75,7 +75,32 @@ async function getBitableRecords(token: string): Promise<BitableRecord[]> {
   return response.data.data.items;
 }
 
-function formatRecords(records: BitableRecord[]): Record<string, any> {
+async function getFileDownloadUrl(fileToken: string, tenantToken: string): Promise<string | null> {
+  try {
+    const r = await axios.post(
+      `${FEISHU_API_BASE}/drive/v1/file/get_download_url`,
+      { file_token: fileToken },
+      { headers: { Authorization: `Bearer ${tenantToken}` } }
+    );
+    if (r.data && r.data.code === 0 && r.data.data && r.data.data.download_url) {
+      return r.data.data.download_url;
+    }
+  } catch {}
+  try {
+    const r2 = await axios.get(
+      `${FEISHU_API_BASE}/drive/v1/files/${fileToken}/download`,
+      {
+        headers: { Authorization: `Bearer ${tenantToken}` },
+        maxRedirects: 0,
+        validateStatus: (s) => s === 302 || (s >= 200 && s < 300),
+      }
+    );
+    if (r2.headers && (r2.headers.location as string)) return r2.headers.location as string;
+  } catch {}
+  return null;
+}
+
+async function formatRecords(records: BitableRecord[], tenantToken: string): Promise<Record<string, any>> {
   const contentMap: Record<string, any> = {};
   for (const record of records) {
     const key = record.fields.key;
@@ -83,11 +108,22 @@ function formatRecords(records: BitableRecord[]): Record<string, any> {
 
     if (record.fields.content_text) {
       contentMap[key] = record.fields.content_text;
-    } else if (record.fields.content_image && record.fields.content_image.length > 0) {
-      contentMap[key] = record.fields.content_image.map(img => ({
-        file_token: img.file_token,
-        name: img.name,
-      }));
+    }
+
+    if (record.fields.content_image && record.fields.content_image.length > 0) {
+      const urls: string[] = [];
+      for (const img of record.fields.content_image) {
+        let url = img.url || null;
+        if (!url) {
+          url = await getFileDownloadUrl(img.file_token, tenantToken);
+        }
+        if (url) urls.push(url);
+      }
+      if (/gallery/i.test(key) || /_gallery_urls$/.test(key)) {
+        contentMap[key] = urls;
+      } else if (/image/i.test(key) || /cover/i.test(key) || /_image_url$/.test(key) || /_cover_url$/.test(key)) {
+        contentMap[key] = urls[0] || contentMap[key];
+      }
     }
   }
   return contentMap;
@@ -133,7 +169,7 @@ export default async function handler(
   try {
     const accessToken = await getTenantAccessToken();
     const configRecords = await getBitableRecords(accessToken);
-    const formattedContent = formatRecords(configRecords);
+    const formattedContent = await formatRecords(configRecords, accessToken);
     let articlesList: any[] = [];
     if (ARTICLES_TABLE_ID) {
       const response = await axios.get<BitableRecordsResponse>(
@@ -164,7 +200,7 @@ if (require.main === module) {
     try {
       const accessToken = await getTenantAccessToken();
       const configRecords = await getBitableRecords(accessToken);
-      const formattedContent = formatRecords(configRecords);
+      const formattedContent = await formatRecords(configRecords, accessToken);
       let articlesList: any[] = [];
       if (ARTICLES_TABLE_ID) {
         const response = await axios.get<BitableRecordsResponse>(
