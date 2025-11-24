@@ -10,6 +10,7 @@ const APP_SECRET = process.env.FEISHU_APP_SECRET || process.env.VITE_FEISHU_APP_
 const APP_TOKEN = process.env.FEISHU_APP_TOKEN || process.env.VITE_FEISHU_APP_TOKEN;
 const TABLE_ID = process.env.FEISHU_TABLE_ID || process.env.VITE_FEISHU_TABLE_ID;
 const ARTICLES_TABLE_ID = process.env.FEISHU_ARTICLES_TABLE_ID || process.env.VITE_FEISHU_ARTICLES_TABLE_ID;
+const USER_ACCESS_TOKEN = process.env.FEISHU_USER_ACCESS_TOKEN || process.env.VITE_FEISHU_USER_ACCESS_TOKEN;
 
 const FEISHU_API_BASE = 'https://open.feishu.cn/open-apis';
 
@@ -75,32 +76,34 @@ async function getBitableRecords(token: string): Promise<BitableRecord[]> {
   return response.data.data.items;
 }
 
-async function getFileDownloadUrl(fileToken: string, tenantToken: string): Promise<string | null> {
-  try {
-    const r = await axios.post(
-      `${FEISHU_API_BASE}/drive/v1/file/get_download_url`,
-      { file_token: fileToken },
-      { headers: { Authorization: `Bearer ${tenantToken}` } }
-    );
-    if (r.data && r.data.code === 0 && r.data.data && r.data.data.download_url) {
-      return r.data.data.download_url;
-    }
-  } catch {}
-  try {
-    const r2 = await axios.get(
-      `${FEISHU_API_BASE}/drive/v1/files/${fileToken}/download`,
-      {
-        headers: { Authorization: `Bearer ${tenantToken}` },
-        maxRedirects: 0,
-        validateStatus: (s) => s === 302 || (s >= 200 && s < 300),
-      }
-    );
-    if (r2.headers && (r2.headers.location as string)) return r2.headers.location as string;
-  } catch {}
-  return null;
+async function getFileDownloadUrl(fileToken: string, useToken: string): Promise<string | null> {
+  const map = await batchGetTmpDownloadUrls([fileToken], useToken);
+  return map[fileToken] || null;
 }
 
-async function formatRecords(records: BitableRecord[], tenantToken: string): Promise<Record<string, any>> {
+async function batchGetTmpDownloadUrls(fileTokens: string[], token: string): Promise<Record<string, string>> {
+  if (!fileTokens.length) return {};
+  try {
+    const r = await axios.post(
+      `${FEISHU_API_BASE}/drive/v1/media/batch_get_tmp_download_url`,
+      { file_tokens: fileTokens },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (r.data && r.data.code === 0) {
+      const list = r.data.data?.tmp_download_urls || r.data.data?.items || [];
+      const map: Record<string, string> = {};
+      for (const item of list) {
+        const tok = item.file_token || item.token || item.fileToken;
+        const url = item.tmp_download_url || item.url || item.download_url;
+        if (tok && url) map[tok] = url;
+      }
+      return map;
+    }
+  } catch {}
+  return {};
+}
+
+async function formatRecords(records: BitableRecord[], driveToken: string): Promise<Record<string, any>> {
   const contentMap: Record<string, any> = {};
   for (const record of records) {
     const key = record.fields.key;
@@ -111,18 +114,25 @@ async function formatRecords(records: BitableRecord[], tenantToken: string): Pro
     }
 
     if (record.fields.content_image && record.fields.content_image.length > 0) {
+      const tokens = record.fields.content_image.map(i => i.file_token).filter(Boolean);
+      const batchMap = await batchGetTmpDownloadUrls(tokens, driveToken);
       const urls: string[] = [];
       for (const img of record.fields.content_image) {
-        let url = img.url || null;
+        const url = img.url || batchMap[img.file_token] || null;
         if (!url) {
-          url = await getFileDownloadUrl(img.file_token, tenantToken);
+          const single = await getFileDownloadUrl(img.file_token, driveToken);
+          if (single) urls.push(single);
+        } else {
+          urls.push(url);
         }
-        if (url) urls.push(url);
       }
-      if (/gallery/i.test(key) || /_gallery_urls$/.test(key)) {
-        contentMap[key] = urls;
-      } else if (/image/i.test(key) || /cover/i.test(key) || /_image_url$/.test(key) || /_cover_url$/.test(key)) {
-        contentMap[key] = urls[0] || contentMap[key];
+      const hasText = typeof contentMap[key] === 'string' && contentMap[key].trim() !== '';
+      if (!hasText) {
+        if (/gallery/i.test(key) || /_gallery_urls$/.test(key)) {
+          contentMap[key] = urls;
+        } else if (/image/i.test(key) || /cover/i.test(key) || /_image_url$/.test(key) || /_cover_url$/.test(key)) {
+          contentMap[key] = urls[0] || contentMap[key];
+        }
       }
     }
   }
@@ -169,7 +179,7 @@ export default async function handler(
   try {
     const accessToken = await getTenantAccessToken();
     const configRecords = await getBitableRecords(accessToken);
-    const formattedContent = await formatRecords(configRecords, accessToken);
+    const formattedContent = await formatRecords(configRecords, USER_ACCESS_TOKEN || accessToken);
     let articlesList: any[] = [];
     if (ARTICLES_TABLE_ID) {
       const response = await axios.get<BitableRecordsResponse>(
@@ -199,8 +209,19 @@ if (require.main === module) {
     console.log(`[Local API Server] Received request for: ${req.url}`);
     try {
       const accessToken = await getTenantAccessToken();
+      const u = new URL(req.url || '/', 'http://localhost');
+      if (u.pathname === '/tmp-download') {
+        const t = u.searchParams.getAll('token');
+        const map = await batchGetTmpDownloadUrls(t, USER_ACCESS_TOKEN || accessToken);
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.writeHead(200);
+        res.end(JSON.stringify(map));
+        return;
+      }
+
       const configRecords = await getBitableRecords(accessToken);
-      const formattedContent = await formatRecords(configRecords, accessToken);
+      const formattedContent = await formatRecords(configRecords, USER_ACCESS_TOKEN || accessToken);
       let articlesList: any[] = [];
       if (ARTICLES_TABLE_ID) {
         const response = await axios.get<BitableRecordsResponse>(
@@ -213,7 +234,7 @@ if (require.main === module) {
       }
 
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Access-Control-Allow-Origin', '*'); // 允许跨域
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.writeHead(200);
       res.end(JSON.stringify({ config: formattedContent, articles: articlesList }));
 

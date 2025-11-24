@@ -24,6 +24,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("全部");
   const [content, setContent] = useState<Record<string, any>>({});
   const [articles, setArticles] = useState<Article[]>([]);
+  const normalize = (s: string) => (s || "").trim();
 
   useEffect(() => {
     const loadContent = async () => {
@@ -43,7 +44,7 @@ export default function App() {
           date: String(cfg[`${p}_date`] || ''),
           location: String(cfg[`${p}_location`] || ''),
           coverImage: String(cover),
-          category: String(cfg[`${p}_category`] || ''),
+          category: normalize(String(cfg[`${p}_category`] || '')),
           content: String(cfg[`${p}_content`] || ''),
           gallery: Array.isArray(cfg[`${p}_gallery_urls`])
             ? (cfg[`${p}_gallery_urls`] as string[])
@@ -60,18 +61,18 @@ export default function App() {
   }, []);
 
   const categories = ["全部", "亚洲", "欧洲", "海岛", "非洲"];
-  const dynamicCategories = Array.from(new Set(articles.map(a => a.category).filter(Boolean)));
+  const dynamicCategories = Array.from(new Set(articles.map(a => normalize(a.category)).filter(Boolean)));
   const allCategories = dynamicCategories.length > 0 ? ["全部", ...dynamicCategories] : categories;
 
   const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
+    setSelectedCategory(normalize(category));
     setSelectedArticle(null); // Reset article selection when category changes
   };
 
   const filteredArticles =
     selectedCategory === "全部"
       ? articles
-      : articles.filter((article) => article.category === selectedCategory);
+      : articles.filter((article) => normalize(article.category) === selectedCategory);
 
   return (
     <div className="bg-stone-50 min-h-screen font-sans">
@@ -91,10 +92,18 @@ export default function App() {
             statsStories={content.stats_stories}
             statsRegions={content.stats_regions}
             statsLatest={content.stats_latest}
+            statsLabelStories={content.hero_stats_label_stories}
+            statsLabelRegions={content.hero_stats_label_regions}
+            statsLabelLatest={content.hero_stats_label_latest}
             imageUrl={content.hero_image_url}
             captionTitle={content.hero_caption_title}
             captionSubtitle={content.hero_caption_subtitle}
             captionIndex={content.hero_caption_index}
+            topLeftYear={content.hero_top_left_year}
+            topLeftLabel={content.hero_top_left_label}
+            topRightLabel={content.hero_top_right_label}
+            topRightSub={content.hero_top_right_sub}
+            ctaText={content.hero_cta_text}
           />
           <Header
             logoText={content.header_logo}
@@ -106,6 +115,11 @@ export default function App() {
             articles={filteredArticles}
             onArticleClick={setSelectedArticle}
           />
+          {filteredArticles.length === 0 && (
+            <div className="max-w-6xl mx-auto px-8 md:px-16 py-8 text-stone-400" style={{fontWeight:300}}>
+              {content.grid_empty_text || '暂无该分类内容'}
+            </div>
+          )}
           <Footer
             title={content.footer_title}
             text={content.footer_text}

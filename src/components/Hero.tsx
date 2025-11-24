@@ -10,10 +10,18 @@ interface HeroProps {
   statsStories?: string;
   statsRegions?: string;
   statsLatest?: string;
+  statsLabelStories?: string;
+  statsLabelRegions?: string;
+  statsLabelLatest?: string;
   imageUrl?: string;
   captionTitle?: string;
   captionSubtitle?: string;
   captionIndex?: string;
+  topLeftYear?: string;
+  topLeftLabel?: string;
+  topRightLabel?: string;
+  topRightSub?: string;
+  ctaText?: string;
 }
 
 export function Hero({
@@ -25,10 +33,18 @@ export function Hero({
   statsStories,
   statsRegions,
   statsLatest,
+  statsLabelStories,
+  statsLabelRegions,
+  statsLabelLatest,
   imageUrl,
   captionTitle,
   captionSubtitle,
   captionIndex,
+  topLeftYear,
+  topLeftLabel,
+  topRightLabel,
+  topRightSub,
+  ctaText,
 }: HeroProps) {
   const scrollToContent = () => {
     window.scrollTo({
@@ -97,17 +113,17 @@ export function Hero({
                 <div className="flex items-center gap-8 pl-4">
                   <div className="space-y-2">
                     <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>{statsStories || '06'}</div>
-                    <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Stories</div>
+                    <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">{statsLabelStories || 'Stories'}</div>
                   </div>
                   <div className="w-px h-12 bg-stone-300" />
                   <div className="space-y-2">
                     <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>{statsRegions || '04'}</div>
-                    <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Regions</div>
+                    <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">{statsLabelRegions || 'Regions'}</div>
                   </div>
                   <div className="w-px h-12 bg-stone-300" />
                   <div className="space-y-2">
                     <div className="text-3xl text-stone-900" style={{ fontWeight: 200, letterSpacing: '0.05em' }}>{statsLatest || '2025'}</div>
-                    <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">Latest</div>
+                    <div className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">{statsLabelLatest || 'Latest'}</div>
                   </div>
                 </div>
               </div>
@@ -119,7 +135,7 @@ export function Hero({
               className="group flex items-center gap-4 text-stone-900 hover:text-stone-600 transition-colors pt-4"
             >
               <span className="text-sm tracking-[0.15em]" style={{ fontWeight: 300 }}>
-                探索游记
+                {ctaText || '探索游记'}
               </span>
               <div className="flex items-center gap-2">
                 <Minus className="w-4 h-4" />
@@ -164,21 +180,21 @@ export function Hero({
       {/* Top decorative elements */}
       <div className="absolute top-8 left-8 flex flex-col gap-2">
         <div className="flex items-center gap-3 text-stone-400">
-          <div className="text-[10px] tracking-[0.3em]">2025</div>
+          <div className="text-[10px] tracking-[0.3em]">{topLeftYear || '2025'}</div>
           <div className="w-8 h-px bg-stone-300" />
         </div>
         <div className="text-[9px] tracking-[0.2em] text-stone-400/60 uppercase">
-          Collection
+          {topLeftLabel || 'Collection'}
         </div>
       </div>
       
       <div className="absolute top-8 right-8 flex flex-col items-end gap-2">
         <div className="flex items-center gap-3 text-stone-400">
           <div className="w-8 h-px bg-stone-300" />
-          <div className="text-[10px] tracking-[0.3em]">PORTFOLIO</div>
+          <div className="text-[10px] tracking-[0.3em]">{topRightLabel || 'PORTFOLIO'}</div>
         </div>
         <div className="text-[9px] tracking-[0.2em] text-stone-400/60 uppercase">
-          Vol. I
+          {topRightSub || 'Vol. I'}
         </div>
       </div>
 
