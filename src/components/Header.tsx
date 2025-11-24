@@ -13,7 +13,7 @@ export function Header({ logoText, categories, selectedCategory, onCategoryChang
           {/* Logo */}
           <div className="text-center space-y-2">
             <h2 className="text-xl tracking-[0.2em] text-stone-800" style={{ fontWeight: 300 }}>
-              {logoText || '游记手札'}
+              {logoText}
             </h2>
             <div className="h-px w-16 bg-stone-300 mx-auto" />
           </div>

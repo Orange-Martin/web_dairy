@@ -10,14 +10,13 @@ interface ArticleDetailProps {
 export function ArticleDetail({ article, onBack }: ArticleDetailProps) {
   return (
     <div className="min-h-screen">
-      {/* Hero Image */}
-      <div className="relative h-screen overflow-hidden">
+      <div className="relative w-full aspect-[2/1] max-h-[320px] md:max-h-[360px] lg:max-h-[420px] min-h-[180px] overflow-hidden">
         <ImageWithFallback
           src={article.coverImage}
           alt={article.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-stone-50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-stone-50" />
         
         {/* Back Button */}
         <button
@@ -27,17 +26,13 @@ export function ArticleDetail({ article, onBack }: ArticleDetailProps) {
           <ArrowLeft className="w-5 h-5" />
         </button>
         
-        {/* Title */}
-        <div className="absolute bottom-0 left-0 right-0 px-8 md:px-16 pb-24">
+        <div className="absolute bottom-0 left-0 right-0 px-8 md:px-16 pb-56">
           <div className="max-w-3xl">
             <div className="space-y-6">
-              <div className="text-xs tracking-[0.3em] text-white/70 uppercase">
+              <div className="text-xs tracking-[0.3em] text-white/80 uppercase">
                 {article.category}
               </div>
-              <h1 
-                className="text-5xl md:text-6xl text-white tracking-tight"
-                style={{ fontWeight: 300 }}
-              >
+              <h1 className="text-5xl md:text-6xl text-white tracking-tight drop-shadow-lg" style={{ fontWeight: 250 }}>
                 {article.title}
               </h1>
             </div>
@@ -45,9 +40,8 @@ export function ArticleDetail({ article, onBack }: ArticleDetailProps) {
         </div>
       </div>
 
-      {/* Content */}
-      <article className="max-w-3xl mx-auto px-8 md:px-16 -mt-12 relative z-10">
-        <div className="bg-stone-50 py-16 space-y-16">
+      <article className="max-w-3xl mx-auto px-8 md:px-16 pt-24 pb-20 relative z-10">
+        <div className="space-y-16">
           {/* Meta */}
           <div className="space-y-6">
             <p 

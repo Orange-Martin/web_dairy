@@ -24,6 +24,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("全部");
   const [content, setContent] = useState<Record<string, any>>({});
   const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   const normalize = (s: string) => (s || "").trim();
 
   useEffect(() => {
@@ -31,6 +32,32 @@ export default function App() {
       const fetched = await fetchWebsiteContent();
       const cfg = fetched.config || fetched;
       setContent(cfg);
+      const siteTitle = cfg.site_title || '马丁的花园';
+      if (siteTitle) {
+        document.title = siteTitle;
+      }
+      const faviconUrl = cfg.site_favicon_url || '';
+      if (faviconUrl) {
+        const ensureIcon = (id: string, rel: string, sizes?: string) => {
+          let link = document.querySelector<HTMLLinkElement>(`link#${id}`);
+          if (!link) {
+            link = document.createElement('link');
+            link.id = id;
+            link.rel = rel as any;
+            if (sizes) link.sizes = sizes;
+            link.type = 'image/png';
+            link.crossOrigin = 'anonymous';
+            document.head.appendChild(link);
+          }
+          link.href = faviconUrl;
+        };
+
+        ensureIcon('site-favicon', 'icon');
+        ensureIcon('site-favicon-32', 'icon', '32x32');
+        ensureIcon('site-favicon-16', 'icon', '16x16');
+        ensureIcon('apple-touch-icon', 'apple-touch-icon');
+        ensureIcon('shortcut-icon', 'shortcut icon');
+      }
       const built: Article[] = [];
       for (let i = 1; i <= 6; i++) {
         const p = `grid_${i}`;
@@ -56,6 +83,7 @@ export default function App() {
         });
       }
       setArticles(built);
+      setLoading(false);
     };
     loadContent();
   }, []);
@@ -73,6 +101,10 @@ export default function App() {
     selectedCategory === "全部"
       ? articles
       : articles.filter((article) => normalize(article.category) === selectedCategory);
+
+  if (loading) {
+    return <div className="bg-stone-50 min-h-screen" />;
+  }
 
   return (
     <div className="bg-stone-50 min-h-screen font-sans">
