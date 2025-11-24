@@ -10,7 +10,7 @@ interface ArticleDetailProps {
 export function ArticleDetail({ article, onBack }: ArticleDetailProps) {
   return (
     <div className="min-h-screen">
-      <div className="relative w-full aspect-[2/1] max-h-[320px] md:max-h-[360px] lg:max-h-[420px] min-h-[180px] overflow-hidden">
+      <div className="relative w-full aspect-[2/1] max-h-[220px] md:max-h-[240px] lg:max-h-[280px] min-h-[120px] overflow-hidden">
         <ImageWithFallback
           src={article.coverImage}
           alt={article.title}
